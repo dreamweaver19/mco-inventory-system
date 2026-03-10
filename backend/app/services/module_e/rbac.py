@@ -4,6 +4,7 @@ from jose import jwt
 SECRET_KEY = "mco-secret-key"
 ALGORITHM = "HS256"
 
+
 def get_current_user(token: str):
 
     try:
@@ -16,7 +17,7 @@ def get_current_user(token: str):
 
 def require_role(role):
 
-    def role_checker(user = Depends(get_current_user)):
+    def role_checker(user=Depends(get_current_user)):
 
         if user["role"] != role:
             raise HTTPException(status_code=403, detail="Access Denied")
