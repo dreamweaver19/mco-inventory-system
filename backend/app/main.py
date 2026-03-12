@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from app.api import auth_routes, dashboard_routes
-from app.core.database import engine
+from app.database.base import Base
+from app.database.session import engine
+
+Base.metadata.create_all(bind=engine)
 from app.models.models import Base
 
 # Import API routers

@@ -1,21 +1,13 @@
 from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 
-from app.core.database import SessionLocal
+from app.database.session import get_db
 from app.models.models import Component, ComponentCreate, LifecycleLog
 from app.services.module_d.lifecycle import transition
 from app.services.module_e.rbac import require_role
 from app.utils.audit import log_transition
 
 router = APIRouter()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # ADD COMPONENT
