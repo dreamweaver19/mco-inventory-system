@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api import auth_routes, dashboard_routes
 from app.core.database import engine
 from app.models.models import Base
 
@@ -14,7 +15,18 @@ Base.metadata.create_all(bind=engine)
 # Register routers
 app.include_router(auth_routes.router)
 app.include_router(component_routes.router)
+app.include_router(dashboard_routes.router)
 
 @app.get("/")
 def root():
     return {"message": "MCO Inventory System API Running"}
+
+
+
+
+
+
+
+
+
+

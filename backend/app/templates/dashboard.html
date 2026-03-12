@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MCO Inventory Dashboard</title>
+
+<style>
+
+body{
+font-family: Arial, sans-serif;
+background:#0f172a;
+color:white;
+margin:30px;
+}
+
+h1{
+text-align:center;
+color:#38bdf8;
+margin-bottom:30px;
+}
+
+/* Stats cards */
+
+.stats{
+display:flex;
+justify-content:center;
+gap:20px;
+margin-bottom:30px;
+}
+
+.card{
+background:#1e293b;
+padding:20px 30px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(56,189,248,0.3);
+text-align:center;
+}
+
+.card h2{
+margin:0;
+color:#38bdf8;
+}
+
+.card p{
+margin:5px 0 0;
+color:#94a3b8;
+}
+
+/* Table */
+
+table{
+width:85%;
+margin:auto;
+border-collapse:collapse;
+background:#1e293b;
+box-shadow:0 0 15px rgba(56,189,248,0.2);
+}
+
+th,td{
+padding:12px;
+text-align:center;
+border-bottom:1px solid #334155;
+}
+
+th{
+background:#020617;
+color:#38bdf8;
+}
+
+tr:hover{
+background:#334155;
+}
+
+/* Buttons */
+
+button{
+background:#38bdf8;
+color:black;
+border:none;
+padding:8px 12px;
+cursor:pointer;
+border-radius:4px;
+font-weight:bold;
+}
+
+button:hover{
+background:#0ea5e9;
+}
+
+/* Status badges */
+
+.badge{
+padding:5px 10px;
+border-radius:5px;
+font-size:12px;
+}
+
+.receipt{background:#64748b;}
+.await{background:#facc15;color:black;}
+.under{background:#38bdf8;color:black;}
+.serviceable{background:#22c55e;color:black;}
+.unserviceable{background:#ef4444;}
+.issued{background:#10b981;color:black;}
+.disposal{background:#a855f7;}
+
+select{
+padding:6px;
+background:#020617;
+color:white;
+border:1px solid #38bdf8;
+}
+
+</style>
+
+<script>
+
+const transitions = {
+
+"Receipt": ["Awaiting FFFT"],
+"Awaiting FFFT": ["Under FFFT"],
+"Under FFFT": ["Serviceable","Unserviceable"],
+"Serviceable": ["Issued"],
+"Unserviceable": ["Disposal"]
+
+};
+
+async function updateState(componentId){
+
+let newState = document.getElementById("state_"+componentId).value;
+
+let response = await fetch("/component/transition",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+component_id:componentId,
+new_state:newState
+})
+});
+
+let result = await response.json();
+
+alert(result.message || result.error);
+
+location.reload();
+
+}
+
+</script>
+
+</head>
+
+<body>
+
+<h1>MCO Inventory Dashboard</h1>
+
+<!-- Stats cards -->
+
+<div class="stats">
+
+<div class="card">
+<h2 id="totalCount">0</h2>
+<p>Total Components</p>
+</div>
+
+<div class="card">
+<h2 id="serviceableCount">0</h2>
+<p>Serviceable</p>
+</div>
+
+<div class="card">
+<h2 id="unserviceableCount">0</h2>
+<p>Unserviceable</p>
+</div>
+
+</div>
+
+<table>
+
+<tr>
+<th>Component ID</th>
+<th>Name</th>
+<th>Status</th>
+<th>Change Status</th>
+<th>Action</th>
+</tr>
+
+{% for component in components %}
+
+<tr>
+
+<td>{{component.component_id}}</td>
+
+<td>{{component.name}}</td>
+
+<td>
+<span class="badge {{component.state|lower|replace(' ','')}}">
+{{component.state}}
+</span>
+</td>
+
+<td>
+<select id="state_{{component.component_id}}">
+</select>
+</td>
+
+<td>
+<button onclick="updateState({{component.component_id}})">
+Update
+</button>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<script>
+
+window.onload = function(){
+
+let components = {{ components | tojson }};
+
+let serviceable = 0;
+let unserviceable = 0;
+
+document.getElementById("totalCount").innerText = components.length;
+
+components.forEach(function(c){
+
+if(c.state === "Serviceable") serviceable++;
+if(c.state === "Unserviceable") unserviceable++;
+
+let select = document.getElementById("state_"+c.component_id);
+
+let allowed = transitions[c.state] || [];
+
+select.innerHTML = "";
+
+allowed.forEach(function(state){
+
+let option = document.createElement("option");
+option.value = state;
+option.text = state;
+select.appendChild(option);
+
+});
+
+});
+
+document.getElementById("serviceableCount").innerText = serviceable;
+document.getElementById("unserviceableCount").innerText = unserviceable;
+
+};
+
+</script>
+<script>
+
+setInterval(function(){
+
+location.reload();
+
+},5000);
+
+</script>
+</body>
+</html>
